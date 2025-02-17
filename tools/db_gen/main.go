@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"sort"
-	"strings"
 	"text/template"
 
 	"cuelang.org/go/cue"
@@ -59,7 +57,6 @@ func main() {
 
 	// `relations` フィールドを取得
 	relations := value.LookupPath(cue.ParsePath("relations"))
-	log.Print(relations)
 	if !relations.Exists() {
 		fmt.Println("Warning: `relations` field not found in CUE schema")
 	} else {
@@ -292,42 +289,4 @@ type TableRelation struct {
 	Column    string `json:"column"`
 	Zero      bool   `json:"zero"`
 	Many      bool   `json:"many"`
-}
-
-func (rs Relations) ToMap() map[string]Relations {
-	res := make(map[string]Relations, len(rs))
-	for i := range rs {
-		if _, ok := res[rs[i].Source.TableName]; !ok {
-			res[rs[i].Source.TableName] = make(Relations, 0, 10)
-		}
-		res[rs[i].Source.TableName] = append(res[rs[i].Source.TableName], rs[i])
-	}
-	return res
-}
-
-func (r *Relation) RelString() string {
-	builder := strings.Builder{}
-	if r.Source.Many {
-		builder.WriteString("}")
-	} else {
-		builder.WriteString("|")
-	}
-	if r.Source.Zero {
-		builder.WriteString("o")
-	} else {
-		builder.WriteString("|")
-	}
-	builder.WriteString("--")
-
-	if r.Target.Zero {
-		builder.WriteString("o")
-	} else {
-		builder.WriteString("|")
-	}
-	if r.Target.Many {
-		builder.WriteString("{")
-	} else {
-		builder.WriteString("|")
-	}
-	return builder.String()
 }
