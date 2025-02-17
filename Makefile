@@ -7,9 +7,10 @@ generate_er_puml:
 # 変数定義
 ARCH=$(shell uname -m)
 ROOT_DIR=$(PWD)
-PLANTUML_JAR=plantuml.jar
+PLANTUML_JAR=/plantuml.jar
 PLANTUML_CMD=java -DPLANTUML_LIMIT_SIZE=16384 -jar $(PLANTUML_JAR)
-ER_OUTPUT_DIR=$(ROOT_DIR)/db/er/image
+ER_SRC_DIR=/er
+ER_OUTPUT_DIR=/er/image
 DOCKER_IMAGE=er_image_generator
 
 # 出力ファイル
@@ -33,16 +34,16 @@ build_er_docker:
 # ユーザー用 ER図の SVG を生成
 .PHONY: generate_user_er_svg
 generate_user_er_svg: build_er_docker
-	@mkdir -p $(ER_OUTPUT_DIR)
+	@mkdir -p $(ROOT_DIR)/db/er/image
 	docker run --rm -v $(ROOT_DIR)/db/er:/er $(DOCKER_IMAGE) \
-		$(PLANTUML_CMD) -charset UTF-8 -nometadata -nbthread auto -progress -t"svg" -o "../image" "$(ROOT_DIR)/db/er/er_user_db_gen.puml"
+		$(PLANTUML_CMD) -charset UTF-8 -nometadata -nbthread auto -progress -t"svg" -o "$(ER_OUTPUT_DIR)" "$(ER_SRC_DIR)/er_user_db_gen.puml"
 
 # マスター用 ER図の SVG を生成
 .PHONY: generate_master_er_svg
 generate_master_er_svg: build_er_docker
-	@mkdir -p $(ER_OUTPUT_DIR)
+	@mkdir -p $(ROOT_DIR)/db/er/image
 	docker run --rm -v $(ROOT_DIR)/db/er:/er $(DOCKER_IMAGE) \
-		$(PLANTUML_CMD) -charset UTF-8 -nometadata -nbthread auto -progress -t"svg" -o "../image" "$(ROOT_DIR)/db/er/er_master_db_gen.puml"
+		$(PLANTUML_CMD) -charset UTF-8 -nometadata -nbthread auto -progress -t"svg" -o "$(ER_OUTPUT_DIR)" "$(ER_SRC_DIR)/er_master_db_gen.puml"
 
 # すべての ER図を生成
 .PHONY: generate_er_svg
@@ -51,5 +52,5 @@ generate_er_svg: generate_user_er_svg generate_master_er_svg
 # クリーンアップ
 .PHONY: clean
 clean:
-	rm -rf $(ER_OUTPUT_DIR)
+	rm -rf $(ROOT_DIR)/db/er/image
 	docker rmi $(DOCKER_IMAGE)
