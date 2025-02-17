@@ -254,10 +254,6 @@ type RowDeletionPolicy struct {
 	TtlDays int    `json:"ttl_days"`
 }
 
-func (c *Column) GetName() string {
-	return c.Name
-}
-
 func (c *Column) HasSize() bool {
 	return c.Size != nil || c.IsMaxSize
 }
@@ -266,52 +262,8 @@ func (c *Column) IsPrimaryKey() bool {
 	return c.Pk != nil
 }
 
-func (c Column) IsBool() bool {
-	return c.Type == "bool"
-}
-
-func (c Column) IsFloat64() bool {
-	return c.Type == "float64"
-}
-
-func (c Column) IsInt() bool {
-	return false
-}
-
-func (c Column) IsInt64() bool {
-	return c.Type == "int64"
-}
-
-func (c Column) IsString() bool {
-	return c.Type == "string"
-}
-
-func (c Column) IsNullString() bool {
-	return c.Type == "string" && c.IsNullable()
-}
-
-func (c Column) IsEnum() bool {
-	return c.Type == "enum"
-}
-
-func (c Column) IsTime() bool {
-	return c.Type == "timestamp" || c.Type == "date"
-}
-
-func (c Column) IsCreatedAtColumn() bool {
-	return c.Name == "created_at"
-}
-
-func (c Column) IsUpdatedAtColumn() bool {
-	return c.Name == "updated_at"
-}
-
 func (c Column) IsSoftDeleteColumn() bool {
 	return c.Name == "deleted_at"
-}
-
-func (c Column) IsNumeric() bool {
-	return c.Type == "numeric"
 }
 
 func (c Column) IsNullable() bool {
