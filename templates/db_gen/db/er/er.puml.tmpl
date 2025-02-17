@@ -1,30 +1,28 @@
 @startuml
 
-!include er_diagram_skin.h
-ER_COMMENT自動生成
+!include custom_er_style.puml
+ER_COMMENT(自動生成)
 
 {{- range . }}
-  {{- if .IsUser }}
-    {{- template "er_full.puml.entity" . }}
-  {{- end -}}
+  {{- template "er_full.puml.entity" . }}
 {{- end -}}
 
 {{- range . }}
-  {{- if .IsUser }}
-    {{- template "er_full.puml.relation" . }}
-  {{- end -}}
+  {{- template "er_full.puml.relation" . }}
 {{- end }}
 
 @enduml
 
 {{- define "er_full.puml.entity" }}
-  {{ if .IsMaster -}}
+  {{- if .IsMaster }}
   MASTER_ENTITY({{.Name}}, {{.Description}})
-  {{- else if .IsUser -}}
+  {{- else if .IsUser }}
   INFORMATION_ENTITY({{.Name}}, {{.Description}}, user)
+  {{- else }}
+  GENERAL_ENTITY({{.Name}}, {{.Description}})
   {{- end -}}
    {
-      {{- range $i, $column := .PrimaryKeys }}
+      {{- range .PrimaryKeys }}
       + {{ .Type }} {{ .Name }} : -- {{ .Description }}
       {{- end }}
       --
@@ -42,7 +40,6 @@ ER_COMMENT自動生成
   {{ .Todo }}
   END_TODO
   {{ end }}
-
 {{- end }}
 
 {{- define "er_full.puml.relation" }}

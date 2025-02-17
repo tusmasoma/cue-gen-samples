@@ -1,0 +1,77 @@
+' ER図の見た目を統一するためのカスタムスキン設定
+
+' 空のフィールドやメソッドを非表示にする
+hide empty fields
+hide empty methods
+
+' クラス（エンティティ）の基本スタイル
+skinparam class {
+    BackgroundColor #Snow
+    BorderColor Black
+    ArrowColor Black
+}
+
+' ========== エンティティの定義 ==========
+!define MASTER_ENTITY(name, comment)                     entity name                                         <<comment>> <<M, Technology>>      #Physical
+!define INFORMATION_ENTITY(name, comment, group)         entity name <group グループ>                         <<comment>> <<I, Implementation>>  #PeachPuff
+!define GENERAL_ENTITY(name, comment)                    entity name                                         <<comment>> <<G, General>>        #LightGray
+
+' ========== ER図のコメント・補足 ==========
+!definelong ER_COMMENT(comment)
+legend top left
+# ER図 PlantUML独自記述ルール
+リポジトリルートのREADME.md 参照
+
+# ER図 概要
+comment
+end legend
+!enddefinelong
+
+!definelong ER_COMMENT(comment, supplementary)
+legend top left
+# ER図 PlantUML独自記述ルール
+リポジトリルートのREADME.md 参照
+
+# ER図 概要
+comment
+
+# 補足
+supplementary
+end legend
+!enddefinelong
+
+' ========== ノート・説明・TODO ==========
+!define TODO_COLOR #Business
+!define DESCRIPTION_COLOR #Cyan
+
+!definelong TODO(entity, pos, text)
+    note pos of entity TODO_COLOR
+        TODO
+        text
+    end note
+!enddefinelong
+
+!definelong START_TODO(pos)
+note pos TODO_COLOR
+    TODO
+!enddefinelong
+!define END_TODO end note
+
+!definelong DESCRIPTION(entity, pos, text)
+    note pos of entity DESCRIPTION_COLOR
+        text
+    end note
+!enddefinelong
+
+!definelong START_DESCRIPTION(pos)
+note pos DESCRIPTION_COLOR
+!enddefinelong
+!define END_DESCRIPTION end note
+
+' ========== 関係（リレーション）の定義 ==========
+!define RELATION(leftTable, relation, rightTable, column) leftTable relation rightTable
+!define RELATION(leftTable, relation, rightTable, leftColumn, rightColumn) leftTable "leftColumn" relation "rightColumn" rightTable
+
+' ========== インデックスの定義 ==========
+!define INDEX(columnNameAndOrders, v="", v="", v="", v="", v="", v="", v="", v="") ' INDEX
+!define UNIQUE_INDEX(columnNameOrOrders, v="", v="", v="", v="", v="", v="", v="", v="") ' UNIQUE_INDEX
