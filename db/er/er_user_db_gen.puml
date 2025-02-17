@@ -1,0 +1,22 @@
+@startuml
+
+!include custom_er_style.puml
+ER_COMMENT(自動生成)
+  INFORMATION_ENTITY(i_user, ユーザー, user){
+      + string user_id : -- ユーザーID
+      --
+      string email : -- メールアドレス
+      string name : -- 名前
+  }
+  
+  INFORMATION_ENTITY(i_user_profile, ユーザープロフィール情報, user){
+      + string profile_id : -- プロフィールID
+      --
+      string bio : -- 自己紹介
+      string user_id : -- ユーザーID
+      string website : -- ウェブサイトURL
+  }
+  
+  RELATION(i_user, ||--||, i_user_profile, user_id, user_id)
+
+@enduml

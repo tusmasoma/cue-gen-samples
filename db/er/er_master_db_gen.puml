@@ -1,0 +1,14 @@
+@startuml
+
+!include custom_er_style.puml
+ER_COMMENT(自動生成)
+  MASTER_ENTITY(m_regions, リージョン){
+      + string region_id : -- リージョンID
+      --
+      string country_code : -- 国コード（例: 'JP', 'US'）
+      string description : -- 説明
+      string region_name : -- リージョン名
+  }
+  
+
+@enduml
