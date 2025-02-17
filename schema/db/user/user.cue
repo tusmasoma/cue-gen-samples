@@ -1,6 +1,6 @@
 package user
 
-data: user: {
+data: users: {
 	description: "ユーザー"
 	columns: {
 		user_id: {pk: 1, type: "string", size: 36, description: "ユーザーID"}
