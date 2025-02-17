@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"sort"
+	"strings"
 	"text/template"
 
 	"cuelang.org/go/cue"
@@ -24,6 +26,7 @@ func main() {
 		[]string{
 			"schema/db/user/schema.cue",
 			"schema/db/user/user.cue",
+			"schema/db/user/user_profile.cue",
 		},
 		nil,
 	)
@@ -54,7 +57,33 @@ func main() {
 		return
 	}
 
-	log.Print(tables)
+	// `relations` フィールドを取得
+	relations := value.LookupPath(cue.ParsePath("relations"))
+	log.Print(relations)
+	if !relations.Exists() {
+		fmt.Println("Warning: `relations` field not found in CUE schema")
+	} else {
+		// JSON 経由でデコード
+		jsonBytes, err := relations.MarshalJSON()
+		if err != nil {
+			fmt.Println("Error marshaling CUE relations to JSON:", err)
+			return
+		}
+
+		var relData Relations
+		err = json.Unmarshal(jsonBytes, &relData)
+		if err != nil {
+			fmt.Println("Error unmarshaling JSON to Relations:", err)
+			return
+		}
+
+		// 各テーブルに `relations` をマッピング
+		for _, rel := range relData {
+			if table, exists := tables[rel.Target.TableName]; exists {
+				table.Relations = append(table.Relations, rel)
+			}
+		}
+	}
 
 	// SQL テンプレートの読み込み
 	templateFile, err := os.ReadFile("templates/db_gen/db/ddl/user.sql.tmpl")
@@ -92,7 +121,7 @@ func getTmplFuncMap() template.FuncMap {
 	funcMap := sprig.TxtFuncMap()
 	myFuncMap := template.FuncMap{
 		"sub": func(a, b int) int { return a - b },
-		// 追加s
+		// 追加
 	}
 	for i := range myFuncMap {
 		funcMap[i] = myFuncMap[i]
@@ -114,6 +143,8 @@ type Table struct {
 
 	Todo    string `json:"todo"`
 	Comment string `json:"comment"`
+
+	Relations Relations `json:"relations"`
 }
 
 func (t *Table) GetName() string {
@@ -248,4 +279,55 @@ func (t *Table) PrimaryKeys() Columns {
 		return *res[i].Pk < *res[j].Pk
 	})
 	return res
+}
+
+type Relations []*Relation
+type Relation struct {
+	Source *TableRelation `json:"source"`
+	Target *TableRelation `json:"target"`
+}
+
+type TableRelation struct {
+	TableName string `json:"table_name"`
+	Column    string `json:"column"`
+	Zero      bool   `json:"zero"`
+	Many      bool   `json:"many"`
+}
+
+func (rs Relations) ToMap() map[string]Relations {
+	res := make(map[string]Relations, len(rs))
+	for i := range rs {
+		if _, ok := res[rs[i].Source.TableName]; !ok {
+			res[rs[i].Source.TableName] = make(Relations, 0, 10)
+		}
+		res[rs[i].Source.TableName] = append(res[rs[i].Source.TableName], rs[i])
+	}
+	return res
+}
+
+func (r *Relation) RelString() string {
+	builder := strings.Builder{}
+	if r.Source.Many {
+		builder.WriteString("}")
+	} else {
+		builder.WriteString("|")
+	}
+	if r.Source.Zero {
+		builder.WriteString("o")
+	} else {
+		builder.WriteString("|")
+	}
+	builder.WriteString("--")
+
+	if r.Target.Zero {
+		builder.WriteString("o")
+	} else {
+		builder.WriteString("|")
+	}
+	if r.Target.Many {
+		builder.WriteString("{")
+	} else {
+		builder.WriteString("|")
+	}
+	return builder.String()
 }

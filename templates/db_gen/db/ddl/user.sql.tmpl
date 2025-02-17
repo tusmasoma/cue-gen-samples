@@ -29,5 +29,13 @@ CREATE {{ if .IsUnique -}}UNIQUE NULL_FILTERED {{ end -}}INDEX {{ $tableName }}_
   {{- end -}}
 {{ end }}
 
+{{- if ne (len .Relations) 0 }}
+  {{- range .Relations }}
+ALTER TABLE {{ .Target.TableName }}
+ADD CONSTRAINT fk_{{ .Target.TableName }}_{{ .Target.Column }}
+FOREIGN KEY ({{ .Target.Column }}) REFERENCES {{ .Source.TableName }}({{ .Source.Column }});
+  {{- end -}}
+{{ end }}
+
 {{- end -}}
 {{- end -}}
