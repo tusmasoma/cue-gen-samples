@@ -5,14 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"sort"
 	"text/template"
 
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
-	"github.com/Masterminds/sprig"
-	"github.com/guregu/null/zero"
+	"github.com/tusmasoma/cue-gen-samples/pkg/entity"
+	"github.com/tusmasoma/cue-gen-samples/pkg/util"
 )
 
 func main() {
@@ -53,7 +52,7 @@ func user_gen_exec() {
 	}
 
 	// Go の構造体に変換
-	var tables map[string]*Table
+	var tables map[string]*entity.Table
 	err := data.Decode(&tables)
 	if err != nil {
 		fmt.Println("Error decoding CUE data:", err)
@@ -72,7 +71,7 @@ func user_gen_exec() {
 			return
 		}
 
-		var relData Relations
+		var relData entity.Relations
 		err = json.Unmarshal(jsonBytes, &relData)
 		if err != nil {
 			fmt.Println("Error unmarshaling JSON to Relations:", err)
@@ -95,7 +94,7 @@ func user_gen_exec() {
 	}
 
 	// テンプレートをパース
-	tmpl, err := template.New("sql").Funcs(getTmplFuncMap()).Parse(string(templateFile))
+	tmpl, err := template.New("sql").Funcs(util.GetTmplFuncMap()).Parse(string(templateFile))
 	if err != nil {
 		fmt.Println("Error parsing template:", err)
 		return
@@ -151,7 +150,7 @@ func master_gen_exec() {
 	}
 
 	// Go の構造体に変換
-	var tables map[string]*Table
+	var tables map[string]*entity.Table
 	err := data.Decode(&tables)
 	if err != nil {
 		fmt.Println("Error decoding CUE data:", err)
@@ -166,7 +165,7 @@ func master_gen_exec() {
 	}
 
 	// テンプレートをパース
-	tmpl, err := template.New("sql").Funcs(getTmplFuncMap()).Parse(string(templateFile))
+	tmpl, err := template.New("sql").Funcs(util.GetTmplFuncMap()).Parse(string(templateFile))
 	if err != nil {
 		fmt.Println("Error parsing template:", err)
 		return
@@ -188,133 +187,4 @@ func master_gen_exec() {
 	}
 
 	fmt.Println("SQL schema generated successfully: generated_master.sql")
-}
-
-func getTmplFuncMap() template.FuncMap {
-	funcMap := sprig.TxtFuncMap()
-	myFuncMap := template.FuncMap{
-		"sub": func(a, b int) int { return a - b },
-		// 追加
-	}
-	for i := range myFuncMap {
-		funcMap[i] = myFuncMap[i]
-	}
-	return funcMap
-}
-
-type Tables []*Table
-type Table struct {
-	Name               string             `json:"name"`
-	Description        string             `json:"description"`
-	ColumnMap          map[string]*Column `json:"columns"`
-	InterleaveInParent string             `json:"interleave_in_parent"`
-	RowDeletionPolicy  *RowDeletionPolicy `json:"row_deletion_policy"`
-	Indexes            Indexes            `json:"indexes"`
-
-	IsUser   bool `json:"is_user"`
-	IsMaster bool `json:"is_master"`
-
-	Todo    string `json:"todo"`
-	Comment string `json:"comment"`
-
-	Relations Relations `json:"relations"`
-}
-
-func (t *Table) GetName() string {
-	return t.Name
-}
-
-type Columns []*Column
-type Column struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Pk          *int64 `json:"pk"`
-	Description string `json:"description"`
-
-	Size      *int    `json:"size"`
-	IsMaxSize bool    `json:"is_max_size"`
-	ArrayType *string `json:"array_type"`
-	IsNull    *bool   `json:"is_null"`
-}
-
-type Indexes []*Index
-type Index struct {
-	Keys     Keys `json:"keys"`
-	IsUnique bool `json:"unique"`
-}
-
-type Keys []*Key
-type Key struct {
-	Column string `json:"column"`
-	Desc   bool   `json:"desc"`
-}
-
-type RowDeletionPolicy struct {
-	Column  string `json:"column"`
-	TtlDays int    `json:"ttl_days"`
-}
-
-func (c *Column) HasSize() bool {
-	return c.Size != nil || c.IsMaxSize
-}
-
-func (c *Column) IsPrimaryKey() bool {
-	return c.Pk != nil
-}
-
-func (c Column) IsSoftDeleteColumn() bool {
-	return c.Name == "deleted_at"
-}
-
-func (c Column) IsNullable() bool {
-	return zero.BoolFromPtr(c.IsNull).ValueOrZero() || c.IsSoftDeleteColumn()
-}
-
-func (c Column) SQLType() string {
-	switch c.Type {
-	case "array":
-		return "array<" + *c.ArrayType + ">"
-	case "enum":
-		return "int64"
-	default:
-		return c.Type
-	}
-}
-
-func (t *Table) Columns() Columns {
-	res := make(Columns, 0, len(t.ColumnMap))
-	for i := range t.ColumnMap {
-		res = append(res, t.ColumnMap[i])
-	}
-	sort.Slice(res, func(i, j int) bool {
-		return res[i].Name < res[j].Name
-	})
-	return res
-}
-
-func (t *Table) PrimaryKeys() Columns {
-	res := make(Columns, 0, 2)
-	columns := t.Columns()
-	for i := range columns {
-		if columns[i].IsPrimaryKey() {
-			res = append(res, columns[i])
-		}
-	}
-	sort.Slice(res, func(i, j int) bool {
-		return *res[i].Pk < *res[j].Pk
-	})
-	return res
-}
-
-type Relations []*Relation
-type Relation struct {
-	Source *TableRelation `json:"source"`
-	Target *TableRelation `json:"target"`
-}
-
-type TableRelation struct {
-	TableName string `json:"table_name"`
-	Column    string `json:"column"`
-	Zero      bool   `json:"zero"`
-	Many      bool   `json:"many"`
 }

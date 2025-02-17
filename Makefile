@@ -1,6 +1,14 @@
+.PHONY: generate
+generate:
+	@make generate_ddl
+	@make generate_er_puml
+	@make generate_er_svg
+
+.PHONY: generate_ddl
 generate_ddl:
 	@go run tools/db_gen/ddl/main.go
 
+.PHONY: generate_er_puml
 generate_er_puml:
 	@go run tools/db_gen/er/main.go
 
