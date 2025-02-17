@@ -62,3 +62,8 @@ generate_er_svg: generate_user_er_svg generate_master_er_svg
 clean:
 	rm -rf $(ROOT_DIR)/db/er/image
 	docker rmi $(DOCKER_IMAGE)
+
+.PHONY: fmt
+fmt:
+	cue fmt ./schema/...
+	go mod tidy

@@ -6,7 +6,6 @@ require (
 	cuelang.org/go v0.12.0
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/guregu/null v4.0.0+incompatible
-	github.com/iancoleman/strcase v0.3.0
 )
 
 require (
