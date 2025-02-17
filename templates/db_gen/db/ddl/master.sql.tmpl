@@ -1,0 +1,29 @@
+{{- range . }}
+{{- if .IsMaster }}
+
+{{ $tableName := .Name -}}
+CREATE TABLE {{ $tableName }} (
+  {{- range .Columns }}
+  {{ .Name }} {{ .SQLType }}{{- if .HasSize -}}({{- if .IsMaxSize -}}MAX{{- else -}}{{ .Size }}{{- end }}){{- end -}}{{- if not .IsNullable }} NOT NULL{{- end }},
+  {{- end }}
+) PRIMARY KEY(
+  {{- $primaryKeys := .PrimaryKeys -}}
+  {{ range $i, $column := .PrimaryKeys }}
+    {{ $column.Name }}{{- if lt $i (sub (len $primaryKeys) 1) -}},{{ end }}
+  {{- end }}
+)
+
+  {{- if .InterleaveInParent }}
+, INTERLEAVE IN PARENT {{ .InterleaveInParent }}
+  {{- end -}}
+;
+
+{{- if ne (len .Indexes) 0 }}
+  {{- range .Indexes }}
+CREATE {{ if .IsUnique -}}UNIQUE NULL_FILTERED {{ end -}}INDEX {{ $tableName }}_by{{- range .Keys -}}_{{ .Column }}{{- end }} ON {{ $tableName }} (
+  {{- range $i, $v := .Keys -}}{{ if ne $i 0}}, {{ end }}{{ $v.Column }}{{ if $v.Desc }} DESC{{ end }}{{- end }});
+  {{- end -}}
+{{ end }}
+
+{{- end -}}
+{{- end -}}

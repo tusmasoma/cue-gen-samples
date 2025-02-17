@@ -8,6 +8,10 @@ import (
 	is_user: true
 }
 
+#master_table: #table & {
+	is_master: true
+}
+
 #table: {
 	name:        string & =~"^[a-z0-9_]*$"
 	description: string
