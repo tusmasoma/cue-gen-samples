@@ -21,11 +21,11 @@ import (
 	interleave_in_parent?: string
 	indexes?: [...#index]
 	row_deletion_policy?: #row_deletion_policy
-	isUseInOpenAPI: bool | *false
-	is_user:   bool | *false
-	is_master: bool | *false
-	comment?: string
-	todo?: string
+	isUseInOpenAPI:       bool | *false
+	is_user:              bool | *false
+	is_master:            bool | *false
+	comment?:             string
+	todo?:                string
 }
 
 #index: {
@@ -62,7 +62,7 @@ import (
 		array_type: string
 	}
 	description: string
-	is_null?: bool
+	is_null?:    bool
 }
 
 #columnForOpenAPI: {
