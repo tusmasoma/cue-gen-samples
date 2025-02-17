@@ -9,9 +9,9 @@ data: [Name=_]: spanner.#master_table & {
 	name: Name
 }
 
-i_relations: {}
+m_relations: {}
 relations: [...spanner.#relation]
-relations: list.FlattenN([for v in i_relations {v}], 1)
+relations: list.FlattenN([for v in m_relations {v}], 1)
 
 data_with_default_column: {for d in data {"\(d.name)": d & {
 	columns: {

@@ -16,7 +16,7 @@ import (
 
 func main() {
 	user_gen_exec()
-	master_gen_exec()
+	//master_gen_exec()
 }
 
 func user_gen_exec() {
@@ -26,9 +26,7 @@ func user_gen_exec() {
 	// CUE のスキーマをロード
 	instances := load.Instances(
 		[]string{
-			"schema/db/user/schema.cue",
-			"schema/db/user/user.cue",
-			"schema/db/user/user_profile.cue",
+			"schema/db/main.cue",
 		},
 		nil,
 	)
@@ -125,6 +123,7 @@ func master_gen_exec() {
 	// CUE のスキーマをロード
 	instances := load.Instances(
 		[]string{
+			"schema/db/main.cue",
 			"schema/db/master/schema.cue",
 			"schema/db/master/region.cue",
 		},
