@@ -5,14 +5,18 @@ ER_COMMENT(自動生成)
   INFORMATION_ENTITY(i_user, ユーザー, user){
       + string user_id : -- ユーザーID
       --
+      timestamp created_at : -- 生成日時
       string email : -- メールアドレス
       string name : -- 名前
+      timestamp updated_at : -- 更新日時
   }
   
   INFORMATION_ENTITY(i_user_profile, ユーザープロフィール情報, user){
       + string profile_id : -- プロフィールID
       --
       string bio : -- 自己紹介
+      timestamp created_at : -- 生成日時
+      timestamp updated_at : -- 更新日時
       string user_id : -- ユーザーID
       string website : -- ウェブサイトURL
   }

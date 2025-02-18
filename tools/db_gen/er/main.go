@@ -26,9 +26,7 @@ func user_gen_exec() {
 	// CUE のスキーマをロード
 	instances := load.Instances(
 		[]string{
-			"schema/db/user/schema.cue",
-			"schema/db/user/user.cue",
-			"schema/db/user/user_profile.cue",
+			"schema/db/main.cue",
 		},
 		nil,
 	)
@@ -45,7 +43,7 @@ func user_gen_exec() {
 	}
 
 	// `data` フィールドを取得
-	data := value.LookupPath(cue.ParsePath("data"))
+	data := value.LookupPath(cue.ParsePath("user_data"))
 	if !data.Exists() {
 		fmt.Println("Error: `data` field not found in CUE schema")
 		return
@@ -125,8 +123,7 @@ func master_gen_exec() {
 	// CUE のスキーマをロード
 	instances := load.Instances(
 		[]string{
-			"schema/db/master/schema.cue",
-			"schema/db/master/region.cue",
+			"schema/db/main.cue",
 		},
 		nil,
 	)
@@ -143,7 +140,7 @@ func master_gen_exec() {
 	}
 
 	// `data` フィールドを取得
-	data := value.LookupPath(cue.ParsePath("data"))
+	data := value.LookupPath(cue.ParsePath("master_data"))
 	if !data.Exists() {
 		fmt.Println("Error: `data` field not found in CUE schema")
 		return

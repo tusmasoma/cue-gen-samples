@@ -6,8 +6,10 @@ ER_COMMENT(自動生成)
       + string region_id : -- リージョンID
       --
       string country_code : -- 国コード（例: 'JP', 'US'）
+      timestamp created_at : -- 生成日時
       string description : -- 説明
       string region_name : -- リージョン名
+      timestamp updated_at : -- 更新日時
   }
   
 
