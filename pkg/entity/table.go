@@ -74,6 +74,14 @@ func (c Column) IsNullable() bool {
 	return zero.BoolFromPtr(c.IsNull).ValueOrZero() || c.IsSoftDeleteColumn()
 }
 
+func (c Column) IsCreatedAtColumn() bool {
+	return c.Name == "created_at"
+}
+
+func (c Column) IsUpdatedAtColumn() bool {
+	return c.Name == "updated_at"
+}
+
 func (c Column) SQLType() string {
 	switch c.Type {
 	case "array":
@@ -119,4 +127,59 @@ func (t *Table) PrimaryKeys() Columns {
 		return *res[i].Pk < *res[j].Pk
 	})
 	return res
+}
+
+func (c *Column) GoType() string {
+	// TODO nullable
+	switch c.Type {
+	case "array":
+		// TODO: array対応(mepでは現状使用していない)
+		panic("unexpected type")
+	case "bool":
+		if c.IsNullable() {
+			panic("bool is not nullable")
+		}
+		return "bool"
+	case "bytes":
+		if c.IsNullable() {
+			panic("bytes is not nullable")
+		}
+		return "[]byte"
+	case "date":
+		if c.IsNullable() {
+			panic("date is not nullable")
+		}
+		return "time.Time"
+	case "float64":
+		if c.IsNullable() {
+			panic("float64 is not nullable")
+		}
+		return "float64"
+	case "int64":
+		if c.IsNullable() {
+			panic("int64 is not nullable")
+		}
+		return "int64"
+	case "json":
+		// TODO: json対応(mepでは現状使用していない)
+		panic("unexpected type")
+	case "numeric":
+		if c.IsNullable() {
+			panic("numeric is not nullable")
+		}
+		return "big.Rat"
+	case "string":
+		if c.IsNullable() {
+			return "zeronull.String"
+		}
+		return "string"
+	case "timestamp":
+		if c.IsSoftDeleteColumn() {
+			return "spanner.NullTime"
+		} else {
+			return "time.Time"
+		}
+	default:
+		panic("unexpected type")
+	}
 }

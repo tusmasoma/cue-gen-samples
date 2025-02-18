@@ -12,7 +12,7 @@ const TableName = "{{.Name}}"
 // カラム名の定義
 const (
 {{range $Column := .Columns -}}
-   Column{{$Column.Name | camelcase}} = "{{$Column.Name}}"
+   Column{{$Column.Name | upperCamelcase}} = "{{$Column.Name}}"
 {{end}}
 )
 
@@ -20,12 +20,12 @@ const (
 var (
 	PrimaryKeys = []string{
 {{- range $Column := .PrimaryKeys}}
-    Column{{$Column.Name | camelcase}},
+    Column{{$Column.Name | upperCamelcase}},
 {{- end }}
 	}
 	Columns = []string{
 {{- range $Column := .Columns}}
-    Column{{$Column.Name | camelcase}},
+    Column{{$Column.Name | upperCamelcase}},
 {{- end}}
 	}
 )
@@ -34,28 +34,28 @@ var (
 type Model struct {
 {{- range $Column := .Columns }}
 	// {{ .Description }}
-	{{ .Name | camelcase }} {{ .GoType }} `json:"{{ .Name }}" db:"{{ .Name }}"`
+	{{ .Name | upperCamelcase }} {{ .GoType }} `json:"{{ .Name }}" db:"{{ .Name }}"`
 {{- end }}
 }
 
 // NewModel - 新規作成
 func New(
 {{- range .PrimaryKeys }}
-  {{ .Name | camelcase }} {{ .GoType }},
+  {{ .Name | upperCamelcase }} {{ .GoType }},
 {{- end }}
 {{- range .Columns }}
   {{- if and (not .IsCreatedAtColumn) (not .IsUpdatedAtColumn) (not .IsPrimaryKey)}}
-    {{ .Name | camelcase }} {{ .GoType }},
+    {{ .Name | upperCamelcase }} {{ .GoType }},
   {{- end }}
 {{- end }}
 ) *Model {
 	return &Model{
 	{{- range .PrimaryKeys }}
-		{{ .Name | camelcase }}: {{ .Name | camelcase }},
+		{{ .Name | upperCamelcase }}: {{ .Name | upperCamelcase }},
 	{{- end }}
 	{{- range $Column := .Columns }}
 		{{- if and (not .IsCreatedAtColumn) (not .IsUpdatedAtColumn) (not .IsPrimaryKey) }}
-			{{ .Name | camelcase }}: {{ .Name | camelcase }},
+			{{ .Name | upperCamelcase }}: {{ .Name | upperCamelcase }},
 		{{- end}}
 	{{- end}}
 	}
@@ -67,7 +67,7 @@ func (m *Model) InsertMutation() *spanner.Mutation {
 		TableName,
 		Columns,
 		[]interface{}{
-			{{range .Columns}} m.{{.Name | camelcase}}, {{end}}
+			{{range .Columns}} m.{{.Name | upperCamelcase}}, {{end}}
 		},
 	)
 }
@@ -78,7 +78,7 @@ func (m *Model) UpdateMutation() *spanner.Mutation {
 		TableName,
 		Columns,
 		[]interface{}{
-			{{range .Columns}} m.{{.Name | camelcase}}, {{end}}
+			{{range .Columns}} m.{{.Name | upperCamelcase}}, {{end}}
 		},
 	)
 }
@@ -86,7 +86,7 @@ func (m *Model) UpdateMutation() *spanner.Mutation {
 // Delete 用 Mutation
 func (m *Model) DeleteMutation() *spanner.Mutation {
 	pk := spanner.Key{
-		{{range .PrimaryKeys}} m.{{.Name | camelcase}}, {{end}}
+		{{range .PrimaryKeys}} m.{{.Name | upperCamelcase}}, {{end}}
 	}
 	return spanner.Delete(TableName, pk)
 }
@@ -94,16 +94,4 @@ func (m *Model) DeleteMutation() *spanner.Mutation {
 // Bind - Spanner Row を構造体にマッピング
 func (m *Model) Bind(row *spanner.Row) error {
 	return row.ToStruct(m)
-}
-
-// Validate - データのバリデーション
-func (m *Model) Validate() error {
-	{{- range $Column := .Columns }}
-		{{ if eq .Type "enum" }}
-		if !m.{{.Name | camelcase}}.Within() {
-			return fmt.Errorf("invalid enum value: %v for column: {{.Name}}", m.{{.Name | camelcase}})
-		}
-		{{ end -}}
-	{{ end -}}
-	return nil
 }
