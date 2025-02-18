@@ -3,6 +3,7 @@ generate:
 	@make generate_ddl
 	@make generate_er_puml
 	@make generate_er_svg
+	@make generate_infra
 
 .PHONY: generate_ddl
 generate_ddl:
@@ -11,6 +12,10 @@ generate_ddl:
 .PHONY: generate_er_puml
 generate_er_puml:
 	@go run tools/db_gen/er/main.go
+
+generate_infra:
+	@go run tools/db_gen/infra/spanner/model/main.go
+	@go run tools/db_gen/infra/spanner/user/main.go
 
 # 変数定義
 ARCH=$(shell uname -m)
