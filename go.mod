@@ -8,6 +8,7 @@ require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/guregu/null v4.0.0+incompatible
 	github.com/iancoleman/strcase v0.3.0
+	github.com/pkg/errors v0.9.1
 	golang.org/x/tools v0.29.0
 )
 
