@@ -124,8 +124,8 @@ type {{.Name | upperCamelcase}}Condition struct {
     {{- end }}
 }
 
-// ToConditions - WHERE 句を生成
-func (c *{{.Name | upperCamelcase}}Condition) ToConditions() (string, map[string]interface{}, error) {
+// toConditions - WHERE 句を生成
+func (c *{{.Name | upperCamelcase}}Condition) toConditions() (string, map[string]interface{}, error) {
     conditions := []string{}
     params := map[string]interface{}{}
 
@@ -146,7 +146,7 @@ func (c *{{.Name | upperCamelcase}}Condition) ToConditions() (string, map[string
 
 // FindByConditions - 条件検索
 func (i *Infra) FindByConditions(ctx context.Context, cond *{{.Name | upperCamelcase}}Condition) ({{.Name}}.Models, error) {
-    whereClause, params, err := cond.ToConditions()
+    whereClause, params, err := cond.toConditions()
     if err != nil {
         return nil, err
     }

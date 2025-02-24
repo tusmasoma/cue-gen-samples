@@ -120,8 +120,8 @@ type IUserCondition struct {
 	UserId    *string
 }
 
-// ToConditions - WHERE 句を生成
-func (c *IUserCondition) ToConditions() (string, map[string]interface{}, error) {
+// toConditions - WHERE 句を生成
+func (c *IUserCondition) toConditions() (string, map[string]interface{}, error) {
 	conditions := []string{}
 	params := map[string]interface{}{}
 	if c.CreatedAt != nil {
@@ -159,7 +159,7 @@ func (c *IUserCondition) ToConditions() (string, map[string]interface{}, error) 
 
 // FindByConditions - 条件検索
 func (i *Infra) FindByConditions(ctx context.Context, cond *IUserCondition) (i_user.Models, error) {
-	whereClause, params, err := cond.ToConditions()
+	whereClause, params, err := cond.toConditions()
 	if err != nil {
 		return nil, err
 	}

@@ -121,8 +121,8 @@ type IUserProfileCondition struct {
 	Website   *string
 }
 
-// ToConditions - WHERE 句を生成
-func (c *IUserProfileCondition) ToConditions() (string, map[string]interface{}, error) {
+// toConditions - WHERE 句を生成
+func (c *IUserProfileCondition) toConditions() (string, map[string]interface{}, error) {
 	conditions := []string{}
 	params := map[string]interface{}{}
 	if c.Bio != nil {
@@ -165,7 +165,7 @@ func (c *IUserProfileCondition) ToConditions() (string, map[string]interface{}, 
 
 // FindByConditions - 条件検索
 func (i *Infra) FindByConditions(ctx context.Context, cond *IUserProfileCondition) (i_user_profile.Models, error) {
-	whereClause, params, err := cond.ToConditions()
+	whereClause, params, err := cond.toConditions()
 	if err != nil {
 		return nil, err
 	}
