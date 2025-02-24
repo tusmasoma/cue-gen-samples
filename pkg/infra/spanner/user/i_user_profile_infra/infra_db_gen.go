@@ -3,9 +3,13 @@ package i_user_profile_infra
 
 import (
 	"context"
+	"fmt"
+	"strings"
+	"time"
 
 	"cloud.google.com/go/spanner"
 	"github.com/pkg/errors"
+	"google.golang.org/api/iterator"
 
 	"github.com/tusmasoma/cue-gen-samples/pkg/infra/spanner/model/user/i_user_profile"
 )
@@ -20,7 +24,7 @@ type IFInfra interface {
 		profileId string,
 	) (*i_user_profile.Model, bool, error)
 
-	// FindByConditions(ctx context.Context, conds ...spanner.Condition) (i_user_profile.Models, error)
+	FindByConditions(ctx context.Context, cond *IUserProfileCondition) (i_user_profile.Models, error)
 
 	Insert(ctx context.Context, model *i_user_profile.Model) error
 	Update(ctx context.Context, model *i_user_profile.Model) error
@@ -107,11 +111,70 @@ func (i *Infra) Save(ctx context.Context, model *i_user_profile.Model) error {
 	return i.Insert(ctx, model)
 }
 
+// Condition - 検索条件
+type IUserProfileCondition struct {
+	Bio       *string
+	CreatedAt *time.Time
+	ProfileId *string
+	UpdatedAt *time.Time
+	UserId    *string
+	Website   *string
+}
+
+// ToConditions - WHERE 句を生成
+func (c *IUserProfileCondition) ToConditions() (string, map[string]interface{}, error) {
+	conditions := []string{}
+	params := map[string]interface{}{}
+	if c.Bio != nil {
+		paramKey := "bio"
+		conditions = append(conditions, fmt.Sprintf("%s = @%s", paramKey, paramKey))
+		params[paramKey] = *c.Bio
+	}
+	if c.CreatedAt != nil {
+		paramKey := "created_at"
+		conditions = append(conditions, fmt.Sprintf("%s = @%s", paramKey, paramKey))
+		params[paramKey] = *c.CreatedAt
+	}
+	if c.ProfileId != nil {
+		paramKey := "profile_id"
+		conditions = append(conditions, fmt.Sprintf("%s = @%s", paramKey, paramKey))
+		params[paramKey] = *c.ProfileId
+	}
+	if c.UpdatedAt != nil {
+		paramKey := "updated_at"
+		conditions = append(conditions, fmt.Sprintf("%s = @%s", paramKey, paramKey))
+		params[paramKey] = *c.UpdatedAt
+	}
+	if c.UserId != nil {
+		paramKey := "user_id"
+		conditions = append(conditions, fmt.Sprintf("%s = @%s", paramKey, paramKey))
+		params[paramKey] = *c.UserId
+	}
+	if c.Website != nil {
+		paramKey := "website"
+		conditions = append(conditions, fmt.Sprintf("%s = @%s", paramKey, paramKey))
+		params[paramKey] = *c.Website
+	}
+
+	if len(conditions) == 0 {
+		return "", nil, errors.New("条件が指定されていません")
+	}
+
+	return strings.Join(conditions, " AND "), params, nil
+}
+
 // FindByConditions - 条件検索
-/* func (i *Infra) FindByConditions(ctx context.Context, conds ...spanner.Condition) (i_user_profile.Models, error) {
+func (i *Infra) FindByConditions(ctx context.Context, cond *IUserProfileCondition) (i_user_profile.Models, error) {
+	whereClause, params, err := cond.ToConditions()
+	if err != nil {
+		return nil, err
+	}
+
+	query := fmt.Sprintf("SELECT * FROM %s WHERE %s", i_user_profile.TableName, whereClause)
+
 	stmt := spanner.Statement{
-		SQL: "SELECT * FROM " + i_user_profile.TableName + " WHERE " + spanner.BuildWhereClause(conds),
-		Params: spanner.BuildParams(conds),
+		SQL:    query,
+		Params: params,
 	}
 
 	iter := i.client.Single().Query(ctx, stmt)
@@ -120,7 +183,7 @@ func (i *Infra) Save(ctx context.Context, model *i_user_profile.Model) error {
 	var models i_user_profile.Models
 	for {
 		row, err := iter.Next()
-		if err == spanner.Done {
+		if err == iterator.Done {
 			break
 		}
 		if err != nil {
@@ -135,4 +198,4 @@ func (i *Infra) Save(ctx context.Context, model *i_user_profile.Model) error {
 	}
 
 	return models, nil
-} */
+}

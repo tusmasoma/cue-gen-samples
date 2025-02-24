@@ -4,6 +4,7 @@ package {{.Name}}_infra
 import (
 	"context"
 	"cloud.google.com/go/spanner"
+	"google.golang.org/api/iterator"
 	"github.com/pkg/errors"
 
 	"github.com/tusmasoma/cue-gen-samples/pkg/infra/spanner/model/user/{{.Name}}"
@@ -23,7 +24,7 @@ type IFInfra interface {
 		{{- end }}
 	) (*{{.Name}}.Model, bool, error)
 
-	// FindByConditions(ctx context.Context, conds ...spanner.Condition) ({{.Name}}.Models, error)
+	FindByConditions(ctx context.Context, cond *{{.Name | upperCamelcase}}Condition) ({{.Name}}.Models, error)
 
 	Insert(ctx context.Context, model *{{.Name}}.Model) error
 	Update(ctx context.Context, model *{{.Name}}.Model) error
@@ -116,32 +117,66 @@ func (i *Infra) Save(ctx context.Context, model *{{.Name}}.Model) error {
 	return i.Insert(ctx, model)
 }
 
+// Condition - 検索条件
+type {{.Name | upperCamelcase}}Condition struct {
+    {{- range .Columns }}
+    {{ .Name | upperCamelcase }} *{{ .GoType }}
+    {{- end }}
+}
+
+// ToConditions - WHERE 句を生成
+func (c *{{.Name | upperCamelcase}}Condition) ToConditions() (string, map[string]interface{}, error) {
+    conditions := []string{}
+    params := map[string]interface{}{}
+
+    {{- range .Columns }}
+    if c.{{ .Name | upperCamelcase }} != nil {
+        paramKey := "{{ .Name }}"
+        conditions = append(conditions, fmt.Sprintf("%s = @%s", paramKey, paramKey))
+        params[paramKey] = *c.{{ .Name | upperCamelcase }}
+    }
+    {{- end }}
+
+    if len(conditions) == 0 {
+        return "", nil, errors.New("条件が指定されていません")
+    }
+
+    return strings.Join(conditions, " AND "), params, nil
+}
+
 // FindByConditions - 条件検索
-/* func (i *Infra) FindByConditions(ctx context.Context, conds ...spanner.Condition) ({{.Name}}.Models, error) {
-	stmt := spanner.Statement{
-		SQL: "SELECT * FROM " + {{.Name}}.TableName + " WHERE " + spanner.BuildWhereClause(conds),
-		Params: spanner.BuildParams(conds),
-	}
+func (i *Infra) FindByConditions(ctx context.Context, cond *{{.Name | upperCamelcase}}Condition) ({{.Name}}.Models, error) {
+    whereClause, params, err := cond.ToConditions()
+    if err != nil {
+        return nil, err
+    }
 
-	iter := i.client.Single().Query(ctx, stmt)
-	defer iter.Stop()
+    query := fmt.Sprintf("SELECT * FROM %s WHERE %s", {{.Name}}.TableName, whereClause)
 
-	var models {{.Name}}.Models
-	for {
-		row, err := iter.Next()
-		if err == spanner.Done {
-			break
-		}
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to query spanner")
-		}
+    stmt := spanner.Statement{
+        SQL:    query,
+        Params: params,
+    }
 
-		var model {{.Name}}.Model
-		if err := model.Bind(row); err != nil {
-			return nil, errors.Wrap(err, "failed to bind row data")
-		}
-		models = append(models, &model)
-	}
+    iter := i.client.Single().Query(ctx, stmt)
+    defer iter.Stop()
 
-	return models, nil
-} */
+    var models {{.Name}}.Models
+    for {
+        row, err := iter.Next()
+        if err == iterator.Done {
+            break
+        }
+        if err != nil {
+            return nil, errors.Wrap(err, "failed to query spanner")
+        }
+
+        var model {{.Name}}.Model
+        if err := model.Bind(row); err != nil {
+            return nil, errors.Wrap(err, "failed to bind row data")
+        }
+        models = append(models, &model)
+    }
+
+    return models, nil
+}

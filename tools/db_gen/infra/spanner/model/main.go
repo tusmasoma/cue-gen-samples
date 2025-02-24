@@ -83,59 +83,75 @@ func infra_user_model_gen_exec() {
 		}
 	}
 
-	// テンプレートのパス
-	templatePath := "templates/db_gen/infra/spanner/model/user/model.go.tmpl"
-
-	// 各エンティティごとに `model.go` を生成
+	// 各エンティティごとに `model.go` & `models.go` を生成
 	for _, table := range tables {
-		outputDir := filepath.Join("pkg/infra/spanner/model/user", table.Name)
-		outputFile := filepath.Join(outputDir, "model_db_gen.go")
-
-		// ディレクトリを作成
-		os.MkdirAll(outputDir, os.ModePerm)
-
-		// テンプレートを読み込む
-		tmplContent, err := os.ReadFile(templatePath)
-		if err != nil {
-			fmt.Printf("Error reading template file for %s: %v\n", table.Name, err)
-			continue
-		}
-
-		// テンプレートをパース
-		tmpl, err := template.New("model").Funcs(util.GetTmplFuncMap()).Parse(string(tmplContent))
-		if err != nil {
-			fmt.Printf("Error parsing template for %s: %v\n", table.Name, err)
-			continue
-		}
-
-		// テンプレートを適用
-		var output bytes.Buffer
-		err = tmpl.Execute(&output, table)
-		if err != nil {
-			fmt.Printf("Error executing template for %s: %v\n", table.Name, err)
-			continue
-		}
-
-		// Goコードをフォーマット
-		formattedOutput, err := format.Source(output.Bytes())
-		if err != nil {
-			fmt.Printf("Error formatting Go code for %s: %v\n", table.Name, err)
-			formattedOutput = output.Bytes()
-		}
-
-		// goimports で import の整理
-		formattedOutput, err = imports.Process(outputFile, formattedOutput, nil)
-		if err != nil {
-			fmt.Printf("Error running goimports for %s: %v\n", table.Name, err)
-		}
-
-		// Go ファイルに保存
-		err = os.WriteFile(outputFile, formattedOutput, 0644)
-		if err != nil {
-			fmt.Printf("Error writing file for %s: %v\n", table.Name, err)
-			continue
-		}
-
-		fmt.Printf("Generated: %s\n", outputFile)
+		generateModelFiles(table)
 	}
+}
+
+// `model.go` & `models.go` の生成
+func generateModelFiles(table *entity.Table) {
+	outputDir := filepath.Join("pkg/infra/spanner/model/user", table.Name)
+	os.MkdirAll(outputDir, os.ModePerm)
+
+	// `model.go` の生成
+	generateFileFromTemplate(
+		"templates/db_gen/infra/spanner/model/user/model.go.tmpl",
+		filepath.Join(outputDir, "model_db_gen.go"),
+		table,
+	)
+
+	// `models.go` の生成
+	generateFileFromTemplate(
+		"templates/db_gen/infra/spanner/model/user/models.go.tmpl",
+		filepath.Join(outputDir, "models_db_gen.go"),
+		table,
+	)
+}
+
+// テンプレートを適用して Go コードを生成
+func generateFileFromTemplate(templatePath, outputFile string, table *entity.Table) {
+	// テンプレートを読み込む
+	tmplContent, err := os.ReadFile(templatePath)
+	if err != nil {
+		fmt.Printf("Error reading template file for %s: %v\n", table.Name, err)
+		return
+	}
+
+	// テンプレートをパース
+	tmpl, err := template.New(filepath.Base(templatePath)).Funcs(util.GetTmplFuncMap()).Parse(string(tmplContent))
+	if err != nil {
+		fmt.Printf("Error parsing template for %s: %v\n", table.Name, err)
+		return
+	}
+
+	// テンプレートを適用
+	var output bytes.Buffer
+	err = tmpl.Execute(&output, table)
+	if err != nil {
+		fmt.Printf("Error executing template for %s: %v\n", table.Name, err)
+		return
+	}
+
+	// Goコードをフォーマット
+	formattedOutput, err := format.Source(output.Bytes())
+	if err != nil {
+		fmt.Printf("Error formatting Go code for %s: %v\n", table.Name, err)
+		formattedOutput = output.Bytes()
+	}
+
+	// goimports で import の整理
+	formattedOutput, err = imports.Process(outputFile, formattedOutput, nil)
+	if err != nil {
+		fmt.Printf("Error running goimports for %s: %v\n", table.Name, err)
+	}
+
+	// Go ファイルに保存
+	err = os.WriteFile(outputFile, formattedOutput, 0644)
+	if err != nil {
+		fmt.Printf("Error writing file for %s: %v\n", table.Name, err)
+		return
+	}
+
+	fmt.Printf("Generated: %s\n", outputFile)
 }
